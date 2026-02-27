@@ -1,0 +1,52 @@
+name: Deploy Project
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Upload output as artifact
+              uses: actions/upload-artifact@v4
+              with:
+                name: project
+                path: .
+    deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - name: Download output artifact from te build process
+          uses: actions/download-artifact@v4
+          with:
+            name: project
+
+        - name: Set up SSH
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y openssh-client
+            mkdir -p ~/.ssh
+            eval $(ssh-agent -s)
+            echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+
+        - name: Test SSH connection
+          run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 22 $VPS 'echo connected'
+
+        - name: Deploy via rsync
+          run: |
+            rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 22" -r . $UPLOAD_PATH --delete
+
+        - name: Build image and restart docker image
+          run: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 22 $VPS "cd $DOCKER_COMPOSE_PATH && docker compose build && docker compose up -d"
+env:
+    SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+    VPS: "${{vars.VPS_USER}}@${{vars.VPS_HOST}}"
+    UPLOAD_PATH: "${{vars.VPS_USER}}@${{vars.VPS_HOST}}:${{vars.VPS_DIR}}"
+    DOCKER_COMPOSE_PATH: "${{vars.VPS_DOCKER_COMPOSE}}"

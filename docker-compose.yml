@@ -1,0 +1,13 @@
+services:
+  database:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    environment:
+      SA_PASSWORD: "Welkom01"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - database:/var/opt/mssql/
+    restart: unless-stopped
+volumes:
+  database:
