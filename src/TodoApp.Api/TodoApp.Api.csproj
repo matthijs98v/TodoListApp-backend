@@ -7,10 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Api\Hubs\" />
     <Folder Include="Application\Common\" />
     <Folder Include="Application\Common\Utilities\" />
     <Folder Include="Application\Services\" />
-    <Folder Include="Hubs\" />
     <Folder Include="Infrastructure\" />
     <Folder Include="Infrastructure\Data\" />
     <Folder Include="Infrastructure\Repositories\" />

@@ -1,6 +1,5 @@
 using System.Security.Authentication;
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +10,19 @@ using TodoApp.Api.Infrastructure.Data;
 using TodoApp.Api.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add cors
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -30,29 +42,29 @@ builder.Services.AddScoped<IListMemberService, ListMemberService>();
 builder.Services.AddScoped<IListMemberRepository, ListMemberRepository>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Issuer"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? ""))
-            };
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? ""))
+        };
 
-            // Check the cookie first
-            options.Events = new JwtBearerEvents
+        // Check the cookie first
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
             {
-                OnMessageReceived = context =>
-                {
-                    context.Token = context.Request.Cookies["Authorization"];
-                    return Task.CompletedTask;
-                }
-            };
-        });
+                context.Token = context.Request.Cookies["Authorization"];
+                return Task.CompletedTask;
+            }
+        };
+    });
 
 builder.Services.AddControllers();
 
@@ -66,6 +78,10 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("AllowFrontend");
+}
 
 app.UseAuthorization();
 
@@ -81,28 +97,24 @@ app.Use(async (context, next) =>
     {
         await HttpJson.ResponseToJson(context, 409, new
         {
-            Success = false,
             error.Message
         });
     } catch (InvalidCredentialException error)
     {
         await HttpJson.ResponseToJson(context, 401, new
         {
-            Success = false,
             error.Message
         });
     } catch (KeyNotFoundException error)
     {
         await HttpJson.ResponseToJson(context, 404, new
         {
-            Success = false,
             error.Message
         });
     } catch(Exception)
     {
         await HttpJson.ResponseToJson(context, 500, new
         {
-            Success = false,
             Message="Something went wrong"
         });
     }

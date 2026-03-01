@@ -26,6 +26,7 @@ public class TodoItemService : ITodoItemService
         }
 
         // Insert todo item
+        todoItem.Order = await _repository.GetCount(todoItem.TodoListId);
         await _repository.AddAsync(todoItem);
     }
 

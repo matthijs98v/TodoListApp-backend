@@ -47,6 +47,13 @@ public class TodoItemRepository : ITodoItemRepository
         return result;
     }
 
+    public async Task<int> GetCount(int todoListid)
+    {
+        return await _context.Todos
+            .Where(x => x.TodoListId == todoListid)
+            .CountAsync();
+    }
+
     public async Task<List<TodoItem>> GetByTodoListIdAsync(int todoListId)
     {
         return await _context.Todos

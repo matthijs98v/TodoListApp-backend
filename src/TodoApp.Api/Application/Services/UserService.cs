@@ -21,14 +21,14 @@ public class UserService : IUserService
         Match match = rx.Match(user.Email);
         if ( !match.Success )
         {
-            throw new ArgumentException("Invailid email format");
+            throw new ArgumentException("Invalid email format");
         }
 
         // Do a check if user exists already by name
         var name = await _repository.CheckName(user.Name);
         if (name)
         {
-            throw new ArgumentException("Name already exists");
+            throw new ArgumentException("Username already exists");
         }
 
         // Do a check if user exists already by email

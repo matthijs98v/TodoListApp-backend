@@ -1,7 +1,7 @@
 using System;
 using TodoApp.Api.Domain.Entities;
 
-namespace TodoApp.Api.Application.DTOs;
+namespace TodoApp.Api.Api.DTOs;
 
 public class GetUserResponse
 {

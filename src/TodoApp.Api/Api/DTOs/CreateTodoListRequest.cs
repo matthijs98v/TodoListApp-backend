@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace TodoApp.Api.Application.DTOs;
+namespace TodoApp.Api.Api.DTOs;
 
 public class CreateTodoListRequest
 {

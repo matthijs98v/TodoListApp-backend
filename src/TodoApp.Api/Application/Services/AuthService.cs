@@ -50,7 +50,8 @@ public class AuthService : IAuthService
         {
             throw new InvalidCredentialException();
         }
-
+        
+        Console.WriteLine(loginString);
         // Try to login
         User user = await _user.GetUserByNameAsync(login[0]);
 
