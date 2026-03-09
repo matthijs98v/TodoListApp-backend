@@ -89,7 +89,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<TodoHub>("/todoHub");
+app.MapHub<TodoHub>("/api/todoHub");
 
 // Middleware for error handeling
 app.Use(async (context, next) =>
