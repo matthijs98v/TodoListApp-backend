@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace TodoApp.Api.Api.Hubs;
 
-[Authorize]
 public class TodoHub : Hub
 {
     public async Task JoinTodoList(int TodoListId)
