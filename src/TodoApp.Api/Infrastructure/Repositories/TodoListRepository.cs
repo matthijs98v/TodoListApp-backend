@@ -23,12 +23,8 @@ public class TodoListRepository : ITodoListRepository
     public async Task UpdateAsync(int todoListId, TodoList item)
     {
         var todoList = await _context.TodoLists
-            .FirstOrDefaultAsync(x => x.Id == todoListId);
-
-        if (todoList == null)
-        {
-            throw new KeyNotFoundException("TodoList not found");
-        }
+            .FirstOrDefaultAsync(x => x.Id == todoListId) 
+            ?? throw new KeyNotFoundException("TodoList not found");
 
         todoList.Name = item.Name;
 
@@ -38,13 +34,9 @@ public class TodoListRepository : ITodoListRepository
     public async Task DeleteAsync(int id)
     {
         var todoList = await _context.TodoLists
-            .FirstOrDefaultAsync(x => x.Id == id);
-
-        if (todoList == null)
-        {
-            throw new KeyNotFoundException("TodoList not found");
-        }
-
+            .FirstOrDefaultAsync(x => x.Id == id) 
+            ?? throw new KeyNotFoundException("TodoList not found");
+            
         _context.Remove(todoList);
         await _context.SaveChangesAsync();
     }
@@ -62,5 +54,14 @@ public class TodoListRepository : ITodoListRepository
             .Select(x => x.TodoList)
             .Distinct()
             .ToListAsync();
+    }
+
+    public async Task<TodoList> GetByIdAsync(int todoListId)
+    {
+        var todoList = await _context.TodoLists
+            .FirstOrDefaultAsync(x => x.Id == todoListId)
+            ?? throw new KeyNotFoundException("TodoList not found");
+
+        return todoList;
     }
 }

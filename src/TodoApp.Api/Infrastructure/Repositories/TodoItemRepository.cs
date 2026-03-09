@@ -14,36 +14,30 @@ public class TodoItemRepository : ITodoItemRepository
         _context = context;
     }
 
-    public async Task AddAsync(TodoItem todoList)
+    public async Task<TodoItem> AddAsync(TodoItem todoItem)
     {
-        _context.Todos.Add(todoList);
+        _context.Todos.Add(todoItem);
         await _context.SaveChangesAsync();
+
+        return todoItem;
     }
 
     public async Task DeleteAsync(int todoId)
     {
         var todoItem = await _context.Todos
-            .FirstOrDefaultAsync(x => x.Id == todoId);
-
-        if (todoItem == null)
-        {
-            throw new KeyNotFoundException("TodoItem not found");
-        }
+            .FirstOrDefaultAsync(x => x.Id == todoId) 
+            ?? throw new KeyNotFoundException("TodoItem not found");
 
         _context.Remove(todoItem);
         await _context.SaveChangesAsync();
     }
 
-    public async Task<TodoItem> GetById(int todoItemId)
+    public async Task<TodoItem> GetByIdAsync(int todoItemId)
     {
         var result = await _context.Todos
-            .FirstOrDefaultAsync(x => x.Id == todoItemId);
-
-        if (result == null)
-        {
-            throw new KeyNotFoundException("TodoItem not found");
-        }
-
+            .FirstOrDefaultAsync(x => x.Id == todoItemId) 
+            ?? throw new KeyNotFoundException("TodoItem not found");
+            
         return result;
     }
 
@@ -64,17 +58,52 @@ public class TodoItemRepository : ITodoItemRepository
 
     public async Task UpdateAsync(int todoItemId, TodoItem todoItem)
     {
-        var todo= await _context.Todos
-        .FirstOrDefaultAsync(x => x.Id == todoItemId);
-
-        if (todo == null)
+        var todo = await _context.Todos
+        .FirstOrDefaultAsync(x => x.Id == todoItemId) 
+        ?? throw new KeyNotFoundException("TodoList not found");
+        
+        if (todoItem.Title != null)
         {
-            throw new KeyNotFoundException("TodoList not found");
+            todo.Title = todoItem.Title;
         }
 
-        todo.Title = todoItem.Title ?? todo.Title;
-        todo.Status = todoItem.Status ?? todo.Status;
-        todo.Order = todoItem.Order ?? todo.Order;
+        if (todoItem.Status.HasValue)
+        {
+            todo.Status = todoItem.Status;
+        }
+
+        if (todoItem.Order.HasValue)
+        {
+            // Get all items by id
+            var todoItemList= await _context.Todos
+                .Where(x => x.TodoListId == todo.TodoListId)
+                .OrderBy(x => x.Order)
+                .ToListAsync();
+
+            int? oldOrder = todo.Order;
+            int newOrder = todoItem.Order.Value;
+
+            // Do the sorting
+            foreach (TodoItem item in todoItemList)
+            {
+                if (item.Id == todo.Id)
+                    continue;
+
+                if (newOrder > oldOrder)
+                {
+                    if (item.Order > oldOrder && item.Order <= newOrder)
+                        item.Order--;
+                }
+                else if (newOrder < oldOrder)
+                {
+                    if (item.Order >= newOrder && item.Order < oldOrder)
+                        item.Order++;
+                }
+                
+            }
+
+            todo.Order = newOrder;
+        }
 
         await _context.SaveChangesAsync();
     }

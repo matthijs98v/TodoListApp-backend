@@ -2,9 +2,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Api.Application.Common.Utilities;
-using TodoApp.Api.Api.DTOs;
 using TodoApp.Api.Application.Interfaces;
 using TodoApp.Api.Domain.Entities;
+using TodoApp.Api.Api.DTOs.Response;
+using TodoApp.Api.Api.DTOs.Request;
 
 namespace TodoApp.Api.Api.Controllers
 {
@@ -86,6 +87,19 @@ namespace TodoApp.Api.Api.Controllers
             var result = new GetUserResponse(user);
 
             return Ok(result);
+        }
+
+        [HttpPost("search")]
+        public async Task<IActionResult> GetUserByName(GetUserByNameRequest request)
+        {
+            var users = await _users.SearchUserByNameAsync(request.Name ?? "");
+
+            // User dto mapping to strip out the password
+            var results = users
+                .Select(x => new GetUserResponse(x))
+                .ToList();
+                
+            return Ok(new {users=results});
         }
     }
 }

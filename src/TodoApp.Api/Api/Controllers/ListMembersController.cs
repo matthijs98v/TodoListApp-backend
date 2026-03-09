@@ -1,9 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TodoApp.Api.Api.DTOs;
 using TodoApp.Api.Application.Interfaces;
 using TodoApp.Api.Domain.Entities;
+using TodoApp.Api.Api.DTOs.Response;
+using TodoApp.Api.Api.DTOs.Request;
 
 namespace TodoApp.Api.Api.Controllers
 {
@@ -44,7 +45,7 @@ namespace TodoApp.Api.Api.Controllers
 
         [Authorize]
         [HttpDelete("{memberListId}")]
-        public async Task<IActionResult> DeleteListMember(int memberListId, DeleteListMemberRequest request)
+        public async Task<IActionResult> DeleteListMember(int memberListId)
         {
             // Get the user id
             var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -53,7 +54,7 @@ namespace TodoApp.Api.Api.Controllers
 
             int userId = int.Parse(userIdClaim.Value);
 
-            await _listMembers.DeleteUserAsync(userId, memberListId, request.TodoListId);
+            await _listMembers.DeleteUserAsync(userId, memberListId);
 
             return Ok(new
             {
@@ -74,14 +75,10 @@ namespace TodoApp.Api.Api.Controllers
 
             var listMembers = await _listMembers.GetUserListAsync(userId, todoListId);
              
-            // User dto mapping to strip out the password
-            var result = listMembers
-                .Select(x => new GetUserResponse(x))
-                .ToList();
 
             return Ok(new
             {
-                result
+                listMembers
             });
         }
     }

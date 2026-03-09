@@ -1,6 +1,6 @@
 using System;
 
-namespace TodoApp.Api.Api.DTOs;
+namespace TodoApp.Api.Api.DTOs.Request;
 
 public class CreateListMemberRequest
 {

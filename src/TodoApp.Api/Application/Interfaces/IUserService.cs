@@ -11,5 +11,7 @@ public interface IUserService
 
     Task<User> GetUserByIdAsync(int userId);
 
-    Task<User> GetUserByNameAsync (string userId);
+    Task<User> GetUserByNameAsync (string userName);
+
+    Task<List<User>> SearchUserByNameAsync(string userName);
 }

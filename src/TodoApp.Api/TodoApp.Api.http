@@ -2,7 +2,7 @@
 
 POST {{TodoApp.Api_HostAddress}}/api/auth
 Accept: application/json
-Authorization: Basic test:Welkom01
+Authorization: Basic hello:Welkom01
 ###
 
 POST {{TodoApp.Api_HostAddress}}/api/auth/logout
@@ -32,6 +32,14 @@ Content-Type: application/json
 }
 ###
 
+Post {{TodoApp.Api_HostAddress}}/api/users/search
+Content-Type: application/json
+
+{
+    "Name" : "hello"
+}
+###
+
 GET {{TodoApp.Api_HostAddress}}/api/todolists
 Accept: application/json
 ###
@@ -40,12 +48,16 @@ GET {{TodoApp.Api_HostAddress}}/api/todolists/1
 Accept: application/json
 ###
 
+GET {{TodoApp.Api_HostAddress}}/api/todolists/1/items
+Accept: application/json
+###
+
 POST {{TodoApp.Api_HostAddress}}/api/todolists
 Accept: application/json
 Content-Type: application/json
 
 {
-    "Name" : "Test TodoList"
+    "Name" : "Test TodoList 3"
 }
 ###
 
@@ -67,32 +79,31 @@ Accept: application/json
 Content-Type: application/json
 
 {   
-    "TodoListId" : 3,
+    "TodoListId" : 1,
     "Title" : "Test by new member!",
     "Status" : 1
 }
 ###
 
-PUT {{TodoApp.Api_HostAddress}}/api/todoitems/3
+PUT {{TodoApp.Api_HostAddress}}/api/todoitems/1
 Accept: application/json
 Content-Type: application/json
 
 {   
-    "Order" : 99
+    "Status" : 1
 }
+###
+
+GET {{TodoApp.Api_HostAddress}}/api/todoitems/2005
+Accept: application/json
 ###
 
 Get {{TodoApp.Api_HostAddress}}/api/listmembers/1
 Accept: application/json
 ###
 
-DELETE {{TodoApp.Api_HostAddress}}/api/listmembers/3
+DELETE {{TodoApp.Api_HostAddress}}/api/listmembers/
 Accept: application/json
-Content-Type: application/json
-
-{
-    "TodoListId" : 3
-}
 ###
 
 POST {{TodoApp.Api_HostAddress}}/api/listmembers
@@ -100,9 +111,10 @@ Accept: application/json
 Content-Type: application/json
 
 {   
-    "UserId" : 2,
+    "UserId" : 1,
     "TodoListId" : 1
 }
 ###
 
 
+Get {{TodoApp.Api_HostAddress}}/api/todoitems/2005

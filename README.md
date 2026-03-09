@@ -1,6 +1,6 @@
 # Todo list app
 
-The backend of a todolist app. In the backend you could create and share a todolist, It is also posible to add members to your list with read and write access as well as read only.
+The backend of a todolist app. In the backend you could create and share a todolist, It is also posible to add members to your list with read and write access as well.
 
 This Project uses the backend
 - [Vue frontend](https://github.com/matthijs98v/TodoListApp-frontend)
@@ -8,7 +8,7 @@ This Project uses the backend
 Here is a live demo [DEMO](https://todo.matthijsverheijen.com).
 
 ## Technical detials 
-This app is build in c# and dotnet 10. It uses the dotnet Entity framework for the database and migrations.
+This app is build in c# and dotnet 10. It uses the dotnet Entity framework for the database and migrations. It also uses signal r for the realtime todolist
 
 ## Setup on local in development
 ### For starting the project

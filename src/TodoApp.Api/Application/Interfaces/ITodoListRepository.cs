@@ -7,6 +7,7 @@ public interface ITodoListRepository
 {
     Task<List<TodoList>> GetAllTodoListsByUserIdAsync(int userId);
     Task AddAsync(TodoList todoList);
+    Task<TodoList> GetByIdAsync(int todoListId);
     Task DeleteAsync(int todoListId);
     Task UpdateAsync(int todoListId, TodoList todoList);
 }

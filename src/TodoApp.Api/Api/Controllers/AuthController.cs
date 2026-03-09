@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Api.Application.Interfaces;
 
@@ -38,7 +36,7 @@ namespace TodoApp.Api.Api.Controllers
                     cookieOptions.Secure = true;
                 } else
                 {
-                    cookieOptions.SameSite = SameSiteMode.None;
+                    cookieOptions.SameSite = SameSiteMode.Lax;
                     cookieOptions.Secure = false;
                 }
 
@@ -72,7 +70,7 @@ namespace TodoApp.Api.Api.Controllers
                 cookieOptions.Secure = true;
             } else
             {
-                cookieOptions.SameSite = SameSiteMode.None;
+                cookieOptions.SameSite = SameSiteMode.Lax;
                 cookieOptions.Secure = false;
             }
 

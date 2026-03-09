@@ -1,6 +1,8 @@
 using System;
-using System.Formats.Asn1;
 using System.Security.Authentication;
+using Microsoft.AspNetCore.SignalR;
+using TodoApp.Api.Api.Hubs;
+using TodoApp.Api.Application.DTOs;
 using TodoApp.Api.Application.Interfaces;
 using TodoApp.Api.Domain.Entities;
 
@@ -10,13 +12,16 @@ public class TodoListService : ITodoListService
 {
     ITodoListRepository _repository;
     IListMemberRepository _listMemberRepository;
+    IHubContext<TodoHub> _hubContext;
     public TodoListService(
         ITodoListRepository repository, 
-        IListMemberRepository listMemberRepository
+        IListMemberRepository listMemberRepository,
+        IHubContext<TodoHub> hubContext
     )
     {
         _repository = repository;
         _listMemberRepository = listMemberRepository;
+        _hubContext = hubContext;
     }
 
     public async Task CreateTodoListAsync(int userId, TodoList todoList)
@@ -46,9 +51,49 @@ public class TodoListService : ITodoListService
         await _repository.DeleteAsync(todoListId);
     }
 
-    public async Task<List<TodoList>> GetAllTodoListsAsync(int userId)
+    public async Task<List<TodoListDTO>> GetAllTodoListsAsync(int userId)
     {
-        return await _repository.GetAllTodoListsByUserIdAsync(userId);
+        var result = await _repository.GetAllTodoListsByUserIdAsync(userId);
+
+        var todoLists = new List<TodoListDTO>();
+
+        // Check all rows of creator or not
+        foreach (var value in result)
+        {
+            bool isCreator = await _listMemberRepository.CheckAdmin(userId, value.Id);
+
+            todoLists.Add(new TodoListDTO
+            {
+                Id=value.Id,
+                Name=value.Name,
+                IsCreator=isCreator
+            });
+        }
+
+        // return 
+        return todoLists;
+    }
+
+    public async Task<TodoListDTO> GetTodoListByIdAsync(int userId, int todoListId)
+    {
+        // Check rights
+        bool hasRights = await _listMemberRepository.CheckMember(userId, todoListId);
+        bool isCreator = await _listMemberRepository.CheckAdmin(userId, todoListId);
+
+        if( !hasRights )
+        {
+            throw new InvalidCredentialException("Premissions denied");
+        }
+
+        var result = await  _repository.GetByIdAsync(todoListId);
+
+        return new TodoListDTO
+        {
+            Id=result.Id,
+            Name=result.Name,
+            IsCreator=isCreator
+        };
+
     }
 
     public async Task UpdateTodoListAsync(int userId, int todoListId, TodoList todoList)

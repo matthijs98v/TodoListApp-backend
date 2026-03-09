@@ -1,9 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TodoApp.Api.Api.DTOs;
 using TodoApp.Api.Application.Interfaces;
 using TodoApp.Api.Domain.Entities;
+using TodoApp.Api.Api.DTOs.Response;
+using TodoApp.Api.Api.DTOs.Request;
 
 namespace TodoApp.Api.Api.Controllers
 {
@@ -38,7 +39,7 @@ namespace TodoApp.Api.Api.Controllers
             return Ok(new {TodoLists});
         }
 
-        [HttpGet("{todoListId}")]
+        [HttpGet("{todoListId}/items")]
         [Authorize]
         public async Task<IActionResult> GetTodoListItems(int todoListId)
         {
@@ -52,6 +53,21 @@ namespace TodoApp.Api.Api.Controllers
             var TodoListItems = await _todoItem.GetAllTodoItemsAsync(userId, todoListId);
 
             return Ok(new {TodoListItems});
+        }
+
+        [HttpGet("{todoListId}")]
+        public async Task<IActionResult> GetTodoList(int todoListId)
+        {
+            // Get the user id
+            var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return BadRequest("Id is required");
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            var TodoList = await _todoList.GetTodoListByIdAsync(userId, todoListId);
+
+            return Ok(new {TodoList});
         }
 
         [HttpPost]

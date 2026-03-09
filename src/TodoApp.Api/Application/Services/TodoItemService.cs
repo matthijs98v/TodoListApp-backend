@@ -1,5 +1,7 @@
 using System;
 using System.Security.Authentication;
+using Microsoft.AspNetCore.SignalR;
+using TodoApp.Api.Api.Hubs;
 using TodoApp.Api.Application.Interfaces;
 using TodoApp.Api.Domain.Entities;
 
@@ -9,10 +11,16 @@ public class TodoItemService : ITodoItemService
 {
     ITodoItemRepository _repository;
     IListMemberRepository _listMemberRepository;
-    public TodoItemService(ITodoItemRepository repository, IListMemberRepository listMemberRepository)
+    IHubContext<TodoHub> _hubContext;
+    public TodoItemService(
+        ITodoItemRepository repository, 
+        IListMemberRepository listMemberRepository,
+        IHubContext<TodoHub> hubContext
+    )
     {
         _repository = repository;
         _listMemberRepository = listMemberRepository;
+        _hubContext = hubContext;
     }
 
     public async Task CreateTodoItemAsync(int userId, TodoItem todoItem)
@@ -27,13 +35,20 @@ public class TodoItemService : ITodoItemService
 
         // Insert todo item
         todoItem.Order = await _repository.GetCount(todoItem.TodoListId);
-        await _repository.AddAsync(todoItem);
+        var todoItemModel = await _repository.AddAsync(todoItem);
+
+
+        // Send when todo is updated
+        await _hubContext.Clients.Group("todoList"+todoItemModel.TodoListId).SendAsync("ReceiveMessage", new
+        {
+            Method="loadTodoItems"
+        });
     }
 
     public async Task DeleteTodoItemAsync(int userId, int todoItemtId)
     {
         // Get todlist item model
-        TodoItem todo = await _repository.GetById(todoItemtId);
+        TodoItem todo = await _repository.GetByIdAsync(todoItemtId);
 
         // Check if it is the admin or not
         bool hasRights = await _listMemberRepository.CheckMember(userId, todo.TodoListId);
@@ -43,6 +58,12 @@ public class TodoItemService : ITodoItemService
         }
 
         await _repository.DeleteAsync(todoItemtId);
+
+        // Send when todo is updated
+        await _hubContext.Clients.Group("todoList"+todo.TodoListId).SendAsync("ReceiveMessage", new
+        {
+            Method="loadTodoItems"
+        });
     }
 
     public async Task<List<TodoItem>> GetAllTodoItemsAsync(int userId, int todoListId)
@@ -57,14 +78,37 @@ public class TodoItemService : ITodoItemService
         return await _repository.GetByTodoListIdAsync(todoListId);
     }
 
+    public async Task<TodoItem> GetTodoItemAsync(int userId, int todoItemId)
+    {
+        var todoItem = await _repository.GetByIdAsync(todoItemId);
+
+        bool hasRights = await _listMemberRepository.CheckMember(userId, todoItem.TodoListId);
+        if( !hasRights )
+        {
+            throw new InvalidCredentialException("Premissions denied");
+        }
+
+        return todoItem;
+    }
+
     public async Task UpdateTodoItemAsync(int userId, int todoItemtId, TodoItem todoItem)
     {
-        bool hasRights = await _listMemberRepository.CheckMember(userId, todoItem.TodoListId);
+        var todoItemCheck = await _repository.GetByIdAsync(todoItemtId);
+
+        bool hasRights = await _listMemberRepository.CheckMember(userId, todoItemCheck.TodoListId);
         if( !hasRights )
         {
             throw new InvalidCredentialException("Premissions denied");
         }
         
         await _repository.UpdateAsync(todoItemtId, todoItem);
+
+        // Send when todo is updated
+        TodoItem todo = await _repository.GetByIdAsync(todoItemtId);
+
+        await _hubContext.Clients.Group("todoList"+todo.TodoListId).SendAsync("ReceiveMessage", new
+        {
+            Method="loadTodoItems"
+        });
     }
 }

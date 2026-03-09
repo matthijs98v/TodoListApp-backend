@@ -1,4 +1,5 @@
 using System.Security.Authentication;
+using TodoApp.Api.Application.DTOs;
 using TodoApp.Api.Application.Interfaces;
 using TodoApp.Api.Domain.Entities;
 
@@ -21,10 +22,16 @@ public class ListMemberService : IListMemberService
             throw new InvalidCredentialException("Premissions denied");
         }
 
+        // Check if user already exist in list
+        if (await _repository.CheckMember(listMember.UserId, listMember.TodoListId))
+        {
+            throw new ArgumentException("User is already a member of this todolist");
+        }
+
         await _repository.AddAsync(listMember);
     }
 
-    public async Task<List<User>> GetUserListAsync(int userId, int todoListId)
+    public async Task<List<ListMemberDto>> GetUserListAsync(int userId, int todoListId)
     {
         // Check rights
         bool hasRights = await _repository.CheckMember(userId, todoListId);
@@ -37,12 +44,28 @@ public class ListMemberService : IListMemberService
         return await _repository.GetAllAsync(todoListId);
     }
 
-    public async Task DeleteUserAsync(int userId, int memberListId, int todoListId)
+    public async Task DeleteUserAsync(int userId, int memberListId)
     {
-        // Check rights
-        bool hasRights = await _repository.CheckAdmin(userId, todoListId);
+        var memberListItem = await _repository.GetByIdAsync(memberListId);
 
-        if( !hasRights )
+        // Check admin
+        bool isAdmin = await _repository.CheckAdmin(userId, memberListItem.TodoListId);
+
+        if (
+            memberListItem.UserId == userId
+            && isAdmin
+        )
+        {
+            throw new ArgumentException("You are not allowed to delete yourself");
+        }
+
+        // Check member
+        bool isMember = await _repository.CheckMember(userId, memberListItem.TodoListId);
+
+        if( 
+            !isAdmin && 
+            !(isMember && userId == memberListItem.UserId)
+        )
         {
             throw new InvalidCredentialException("Premissions denied");
         }

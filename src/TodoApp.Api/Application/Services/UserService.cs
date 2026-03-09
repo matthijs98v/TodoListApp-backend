@@ -55,4 +55,9 @@ public class UserService : IUserService
     {
         return await _repository.GetByNameAsync(userName);
     }
+
+    public async Task<List<User>> SearchUserByNameAsync(string userName)
+    {
+        return await _repository.SearchByNameAsync(userName);
+    }
 }
