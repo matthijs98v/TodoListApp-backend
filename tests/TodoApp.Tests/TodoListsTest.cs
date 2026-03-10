@@ -88,4 +88,17 @@ public class TodoListsTest
                 });
         });
     }
+
+    [Fact]
+    public async Task Test_CreateUsersWithInvalidUserName_ShouldFail()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(async () => {
+            await  _userSerivice.CreateUserAsync(new User
+                {
+                    Name = "Test99!",
+                    Email = "test2",
+                    Password = PasswordHasher.Hash("Welkom01")
+                });
+        });
+    }
 }

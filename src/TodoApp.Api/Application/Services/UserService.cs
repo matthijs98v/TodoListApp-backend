@@ -16,12 +16,15 @@ public class UserService : IUserService
     {
 
         // Do a email check first
-        Regex rx = new(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        Match match = rx.Match(user.Email);
-        if ( !match.Success )
+        if ( !Regex.IsMatch(user.Email, @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$") )
         {
             throw new ArgumentException("Invalid email format");
+        }
+
+        // Do a user check
+        if ( !Regex.IsMatch(user.Name, @"^[a-zA-Z0-9]+$") )
+        {
+            throw new ArgumentException("Username must only contain letters and numbers");
         }
 
         // Do a check if user exists already by name
