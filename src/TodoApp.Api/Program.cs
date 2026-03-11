@@ -1,10 +1,9 @@
-using System.Security.Authentication;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TodoApp.Api.Api.Hubs;
-using TodoApp.Api.Application.Common.Utilities;
+using TodoApp.Api.Api.Middlewares;
 using TodoApp.Api.Application.Interfaces;
 using TodoApp.Api.Application.Services;
 using TodoApp.Api.Infrastructure.Data;
@@ -43,6 +42,7 @@ builder.Services.AddScoped<ITodoItemService, TodoItemService>();
 builder.Services.AddScoped<ITodoItemRepository, TodoItemRepository>();
 builder.Services.AddScoped<IListMemberService, ListMemberService>();
 builder.Services.AddScoped<IListMemberRepository, ListMemberRepository>();
+builder.Services.AddScoped<ExceptionMiddleware>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -92,36 +92,6 @@ app.MapControllers();
 app.MapHub<TodoHub>("/api/todoHub");
 
 // Middleware for error handeling
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next(context);
-    } catch(ArgumentException error)
-    {
-        await HttpJson.ResponseToJson(context, 409, new
-        {
-            error.Message
-        });
-    } catch (InvalidCredentialException error)
-    {
-        await HttpJson.ResponseToJson(context, 401, new
-        {
-            error.Message
-        });
-    } catch (KeyNotFoundException error)
-    {
-        await HttpJson.ResponseToJson(context, 404, new
-        {
-            error.Message
-        });
-    } catch(Exception)
-    {
-        await HttpJson.ResponseToJson(context, 500, new
-        {
-            Message="Something went wrong"
-        });
-    }
-});
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.Run();
